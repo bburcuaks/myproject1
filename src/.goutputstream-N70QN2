@@ -1,0 +1,91 @@
+#include "komut.h"
+
+int nowlocation = 0;
+int count = 0;
+
+void processInputFile(const char *inputFileName, const char *outputFileName) {
+    FILE *inputFile = fopen(inputFileName, "r");
+    if (!inputFile) {
+        handleError("Giriş dosyası açılamadı.");
+        return;
+    }
+
+    FILE *outputFile = fopen(outputFileName, "w");
+    if (!outputFile) {
+        fclose(inputFile);
+        handleError("Çıkış dosyası açılamadı.");
+        return;
+    }
+
+    char line[1024];
+    char outputBuffer[1024] = {0};  // Çıktıyı saklamak için ara bellek
+    int outputIndex = 0;  // Ara bellekteki geçerli konum
+
+    while (fgets(line, sizeof(line), inputFile)) {
+        char *command = strtok(line, ":");
+        char *content = strtok(NULL, "\n");
+
+        if (strcmp(command, "yaz") == 0) {
+            char *token = strtok(content, " ");
+            while (token != NULL) {
+                int num = atoi(token);  // Rakamı al
+                token = strtok(NULL, " ");  // Karakteri al
+                if (token[0] == '\\') {  // Özel karakter kontrolü
+                    if (token[1] == 'b') {
+                        for (int i = 0; i < num; i++) {
+                            outputBuffer[outputIndex++] = ' ';  // Boşluk bırak
+                        }
+                    } else if (token[1] == 'n') {
+                        for (int i = 0; i < num; i++) {
+                            outputBuffer[outputIndex++] = '\n';  // Yeni satır
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < num; i++) {
+                        outputBuffer[outputIndex++] = token[0];  // Karakteri yaz
+                    }
+                }
+                token = strtok(NULL, " ");  // Sonraki token
+            }
+        } 
+        else if (strcmp(command, "sil") == 0) {
+            int num = atoi(strtok(content, " "));  // Silinecek karakter sayısı
+            char charToFind = *strtok(NULL, " ");  // Bulunacak karakter
+
+            int foundCount = 0;
+            // Sondan başlayarak geriye doğru silme işlemi yap
+            for (int i = outputIndex - 1; i >= 0 && foundCount < num; i--) {
+                if (outputBuffer[i] == charToFind) {
+                    // Silme işlemi
+                    for (int j = i; j < outputIndex - 1; j++) {
+                        outputBuffer[j] = outputBuffer[j + 1];
+                    }
+                    outputIndex--;  // Arabellek boyutunu güncelle
+                    foundCount++;
+                }
+            }
+        }
+        else if (strcmp(command, "sonagit") == 0) {
+            // Dosyanın sonuna gitmek için bir şey yapmamıza gerek yok
+            // Dosyada kayıtlı toplam token sayısı olan count değişkenine atar
+            nowlocation = count;
+        }
+        else if (strcmp(command, "dur") == 0) {
+            break;  // İşlemi sonlandır
+        }
+    }
+
+    // Çıkış dosyasına yaz
+    fprintf(outputFile, "%s", outputBuffer);
+
+    // Dosya işlemleri burada
+
+    fclose(inputFile);
+    fclose(outputFile);
+}
+
+void handleError(const char *message) {
+    fprintf(stderr, "%s\n", message);
+    exit(EXIT_FAILURE);
+}
+
