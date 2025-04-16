@@ -1,6 +1,4 @@
-Proje Ekibi
-Aslıhan Yılmaz, B211210072
-Ayşe Burcu Aksu, B211210016
+
 
 Proje Açıklaması
 Bu proje, bir giriş dosyasından okunan komutlara göre bir çıkış dosyası oluşturan bir C programı geliştirilmesini içermektedir. 
